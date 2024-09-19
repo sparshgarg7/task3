@@ -1,0 +1,97 @@
+#include <QApplication>
+#include <QWidget>
+#include <QGridLayout>
+#include <QPushButton>
+#include <QLineEdit>
+#include <QString>
+#include <QMessageBox>
+
+class Calculator : public QWidget {
+    Q_OBJECT
+
+public:
+    Calculator() {
+        // Create main layout and input display
+        QGridLayout* gridLayout = new QGridLayout(this);
+        display = new QLineEdit(this);
+        display->setReadOnly(true);
+        display->setAlignment(Qt::AlignRight);
+        display->setFixedHeight(35);
+        gridLayout->addWidget(display, 0, 0, 1, 4);
+
+        // Button labels
+        QString buttons[20] = {
+            "C", "", "", "/",
+            "7", "8", "9", "*",
+            "4", "5", "6", "-",
+            "1", "2", "3", "+",
+            "0", ".", "=", ""
+        };
+
+        // Adding buttons to the grid layout
+        int pos = 0;
+        for (int row = 1; row < 6; row++) {
+            for (int col = 0; col < 4; col++) {
+                QString label = buttons[pos];
+                if (label != "") {
+                    QPushButton* button = new QPushButton(label, this);
+                    button->setFixedSize(50, 50);
+                    gridLayout->addWidget(button, row, col);
+
+                    // Connect buttons to the appropriate slots
+                    if (label == "C") {
+                        connect(button, &QPushButton::clicked, this, &Calculator::clearDisplay);
+                    } else if (label == "=") {
+                        connect(button, &QPushButton::clicked, this, &Calculator::calculate);
+                    } else {
+                        connect(button, &QPushButton::clicked, this, [=]() { appendToDisplay(label); });
+                    }
+                }
+                pos++;
+            }
+        }
+    }
+
+private slots:
+    // Handle button clicks and display the numbers
+    void appendToDisplay(const QString& text) {
+        display->setText(display->text() + text);
+    }
+
+    // Clear the display
+    void clearDisplay() {
+        display->clear();
+    }
+
+    // Perform calculation
+    void calculate() {
+        QString expression = display->text();
+        try {
+            double result = eval(expression);
+            display->setText(QString::number(result));
+        } catch (...) {
+            display->setText("Error");
+        }
+    }
+
+private:
+    QLineEdit* display;
+
+    // Basic evaluation function for arithmetic expressions
+    double eval(const QString& expression) {
+        return expression.toDouble();  // Replace with actual expression parsing
+    }
+};
+
+int main(int argc, char* argv[]) {
+    QApplication app(argc, argv);
+
+    Calculator calculator;
+    calculator.setWindowTitle("Simple Calculator");
+    calculator.setFixedSize(230, 300);
+    calculator.show();
+
+    return app.exec();
+}
+
+#include "calculator.moc"
